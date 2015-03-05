@@ -55,7 +55,8 @@ for bam in bam_files:
 	for read in samfile.fetch():
 		genomes[species_name]["Q"][read_counter,read.rname] = read.mapq
 		genomes[species_name]["read_names"][read_counter,:] = read.qname, read_counter
-		
 		read_counter += 1
+
+
 
 
