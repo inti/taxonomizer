@@ -1,8 +1,24 @@
 import pysam
 import numpy as np
-#import tables as hdf5
 import pandas as pd 
 import subprocess
+import h5py
+######################################################################################
+
+
+def create_genome_group_and_Q_tables(h5_group,specie,R,G):
+        if specie not in h5_group:
+                h5_specie_folder = h5_group.create_group(specie)
+                h5_specie_folder.create_dataset("Q",(R,G),dtype='float16')
+                h5_specie_folder.create_dataset("read_names",(R,2),dtype=(np.string_,np.float16))
+                h5_specie_folder.create_dataset("reference_names",(R,2),dtype=(np.string_,np.float16) )
+		
+        else:
+                print specie, "already exists on the DB"
+
+
+
+#######################################################################################
 
 
 aln_folder = "/media/TeraData/ipedroso/METAGENOMICS/ANALYSES/ALN/simLC/"
@@ -11,34 +27,31 @@ proc = subprocess.Popen(["".join(("ls ",aln_folder,"/Z*bam"))], stdout=subproces
 (out, err) = proc.communicate()
 
 bam_files = out.split()
-all_genomes = np.hstack([pysam.AlignmentFile(bam, "rb").references for bam in bam_files])
+all_genomes=pd.concat([ pd.DataFrame([pysam.AlignmentFile(bam, "rb").count(),
+			pysam.AlignmentFile(bam, "rb").nreferences, 
+			os.path.basename(bam).replace(".sorted.bam","")],
+		      index=["R","G","species_name"]).T	
+		 for bam in bam_files])
 
+h5_file = h5py.File("mytestfile.hdf5", "w")
 
-Q = pd.DataFrame(columns=all_genomes,dtype=np.float16)
+genomes = h5_file.create_group("genomes")
 
-flush = 100
+#all_genomes.apply(lambda (nR,nG,species_name): create_genome_group_and_Q_tables(genomes,species_name,nR,nG),axis=1)
 
 for bam in bam_files:
 	samfile = pysam.AlignmentFile(bam, "rb")
+	species_name = os.path.basename(bam).replace(".sorted.bam","")
 	nR = samfile.count()
-	local_Q = pd.DataFrame(np.zeros((flush , samfile.nreferences)),columns=samfile.references,dtype=np.float16)
-	reads_id = {}
+	nG = samfile.nreferences
+	
+	create_genome_group_and_Q_tables(genomes,species_name,nR,nG)
+
 	read_counter = 0
-	flush_counter = 0
 	for read in samfile.fetch():
-    		if read.qname not in reads_id:
-			reads_id[read.qname] = read_counter
-			read_counter += 1
-
-		local_Q.ix[flush_counter,read.rname] = read.mapq
-		flush_counter += 1
+		genomes[species_name]["Q"][read_counter,read.rname] = read.mapq
+		genomes[species_name]["read_names"][read_counter,:] = read.qname, flush_counter
 		
-		if flush_counter > 99:
-			# here we need to add local_Q to Q with the align methods of 
-			flush_counter = 0
-			print local_Q.head()
-			local_Q = pd.DataFrame(np.zeros((flush , samfile.nreferences)),columns=samfile.references,dtype=np.float16)
-			continue
-
+		read_counter += 1
 
 
