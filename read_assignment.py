@@ -3,6 +3,10 @@ import numpy as np
 import pandas as pd 
 import subprocess
 import h5py
+import os
+
+dt = h5py.special_dtype(vlen=str)
+
 ######################################################################################
 
 
@@ -10,8 +14,8 @@ def create_genome_group_and_Q_tables(h5_group,specie,R,G):
         if specie not in h5_group:
                 h5_specie_folder = h5_group.create_group(specie)
                 h5_specie_folder.create_dataset("Q",(R,G),dtype='float16')
-                h5_specie_folder.create_dataset("read_names",(R,2),dtype=(np.string_,np.float16))
-                h5_specie_folder.create_dataset("reference_names",(R,2),dtype=(np.string_,np.float16) )
+                h5_specie_folder.create_dataset("read_names",(R,2),dtype=dt)
+                h5_specie_folder.create_dataset("reference_names",(R,2),dtype=dt )
 		
         else:
                 print specie, "already exists on the DB"
@@ -50,7 +54,7 @@ for bam in bam_files:
 	read_counter = 0
 	for read in samfile.fetch():
 		genomes[species_name]["Q"][read_counter,read.rname] = read.mapq
-		genomes[species_name]["read_names"][read_counter,:] = read.qname, flush_counter
+		genomes[species_name]["read_names"][read_counter,:] = read.qname, read_counter
 		
 		read_counter += 1
 
