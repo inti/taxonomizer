@@ -5,7 +5,7 @@ import subprocess
 import h5py
 import os
 
-dt = h5py.special_dtype(vlen=str)
+dt_str_vlen = h5py.special_dtype(vlen=str)
 
 ######################################################################################
 
@@ -14,8 +14,8 @@ def create_genome_group_and_Q_tables(h5_group,specie,R,G):
         if specie not in h5_group:
                 h5_specie_folder = h5_group.create_group(specie)
                 h5_specie_folder.create_dataset("Q",(R,G),dtype='float16')
-                h5_specie_folder.create_dataset("read_names",(R,2),dtype=dt)
-                h5_specie_folder.create_dataset("reference_names",(R,2),dtype=dt )
+                h5_specie_folder.create_dataset("read_names",(R,2),dtype=dt_str_vlen)
+                h5_specie_folder.create_dataset("reference_names",(R,2),dtype=dt_str_vlen )
 		
         else:
                 print specie, "already exists on the DB"
