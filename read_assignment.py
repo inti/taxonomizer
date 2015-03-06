@@ -21,7 +21,7 @@ def create_genome_group_and_Q_tables(h5_group,specie,R,G):
                 h5_specie_folder = h5_group.create_group(specie)
                 h5_specie_folder.create_dataset("Q",(R,G),dtype='float')
                 h5_specie_folder.create_dataset("read_names",(R,1),dtype=[('str_vlen',dt_str_vlen), ('f16','float16')])
-                h5_specie_folder.create_dataset("reference_names",(R,1),dtype=[('name1', dt_str_vlen), ('name2', 'float16')] )
+                h5_specie_folder.create_dataset("reference_names",(G,1),dtype=[('name1', dt_str_vlen), ('name2', 'float16')] )
 		
         else:
                 print specie, "already exists on the DB"
