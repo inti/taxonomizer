@@ -13,11 +13,13 @@ dtype_stringVlen_float16 =[('name1', dt_str_vlen), ('name2', 'float16')]
 
 ######################################################################################
 
+def rescale_samMAPQ(mapq):
+	return 1 - np.power(10,mapq/-10)
 
 def create_genome_group_and_Q_tables(h5_group,specie,R,G):
         if specie not in h5_group:
                 h5_specie_folder = h5_group.create_group(specie)
-                h5_specie_folder.create_dataset("Q",(R,G),dtype='float16')
+                h5_specie_folder.create_dataset("Q",(R,G),dtype='float')
                 h5_specie_folder.create_dataset("read_names",(R,1),dtype=[('str_vlen',dt_str_vlen), ('f16','float16')])
                 h5_specie_folder.create_dataset("reference_names",(R,1),dtype=[('name1', dt_str_vlen), ('name2', 'float16')] )
 		
@@ -59,7 +61,7 @@ for bam in bam_files:
 	
 		read_counter = 0
 		for read in samfile.fetch():
-			genomes[species_name]["Q"][read_counter,read.rname] = read.mapq
+			genomes[species_name]["Q"][read_counter,read.rname] = rescale_samMAPQ( read.mapq )
 			genomes[species_name]["read_names"][read_counter,:] = read.qname, read_counter
 			read_counter += 1
 	except:
