@@ -6,6 +6,7 @@ import subprocess
 import h5py
 import os
 
+
 dt_str_vlen = h5py.special_dtype(vlen=str)
 
 dtype_stringVlen_float16 =[('name1', dt_str_vlen), ('name2', 'float16')]
@@ -20,9 +21,9 @@ def create_genome_group_and_Q_tables(h5_group,specie,R,G,ref_names):
         if specie not in h5_group:
                 h5_specie_folder = h5_group.create_group(specie)
                 h5_specie_folder.create_dataset("Q",(R,G),dtype='float')
-                h5_specie_folder.create_dataset("read_names",(R,1),dtype=[('str_vlen',dt_str_vlen), ('f16','float16')])
-                h5_specie_folder.create_dataset("reference_names",(G,),dtype=[('name1', dt_str_vlen), ('name2', 'int')] )
-		h5_specie_folder["reference_names"][:] = [ (rname,i) for i,rname in enumerate(ref_names)]	
+                h5_specie_folder.create_dataset("read_names",(R,1),dtype=dt_str_vlen) 
+                h5_specie_folder.create_dataset("reference_names",(G,),dtype=dt_str_vlen)
+		h5_specie_folder["reference_names"][:] = [ rname for i,rname in enumerate(ref_names)]	
         else:
                 print specie, "already exists on the DB"
 
@@ -62,7 +63,7 @@ for bam in bam_files:
 		read_counter = 0
 		for read in samfile.fetch():
 			genomes[species_name]["Q"][read_counter,read.rname] = rescale_samMAPQ( read.mapq )
-			genomes[species_name]["read_names"][read_counter,:] = read.qname, read_counter
+			genomes[species_name]["read_names"][read_counter,:] = read.qname
 			read_counter += 1
 	except:
 		print "not working"
