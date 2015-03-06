@@ -16,13 +16,13 @@ dtype_stringVlen_float16 =[('name1', dt_str_vlen), ('name2', 'float16')]
 def rescale_samMAPQ(mapq):
 	return 1 - np.power(10,mapq/-10)
 
-def create_genome_group_and_Q_tables(h5_group,specie,R,G):
+def create_genome_group_and_Q_tables(h5_group,specie,R,G,ref_names):
         if specie not in h5_group:
                 h5_specie_folder = h5_group.create_group(specie)
                 h5_specie_folder.create_dataset("Q",(R,G),dtype='float')
                 h5_specie_folder.create_dataset("read_names",(R,1),dtype=[('str_vlen',dt_str_vlen), ('f16','float16')])
-                h5_specie_folder.create_dataset("reference_names",(G,1),dtype=[('name1', dt_str_vlen), ('name2', 'float16')] )
-		
+                h5_specie_folder.create_dataset("reference_names",(G,),dtype=[('name1', dt_str_vlen), ('name2', 'int')] )
+		h5_specie_folder["reference_names"][:] = [ (rname,i) for i,rname in enumerate(ref_names)]	
         else:
                 print specie, "already exists on the DB"
 
@@ -33,7 +33,7 @@ def create_genome_group_and_Q_tables(h5_group,specie,R,G):
 
 aln_folder = "/media/TeraData/ipedroso/METAGENOMICS/ANALYSES/ALN/simLC/"
 
-proc = subprocess.Popen(["".join(("ls ",aln_folder,"/E*bam"))], stdout=subprocess.PIPE, shell=True)
+proc = subprocess.Popen(["".join(("ls ",aln_folder,"/Esch*bam"))], stdout=subprocess.PIPE, shell=True)
 (out, err) = proc.communicate()
 
 bam_files = out.split()
@@ -57,7 +57,7 @@ for bam in bam_files:
 		nR = samfile.count()
 		nG = samfile.nreferences
 		
-		create_genome_group_and_Q_tables(genomes,species_name,nR,nG)
+		create_genome_group_and_Q_tables(genomes,species_name,nR,nG,samfile.references)
 	
 		read_counter = 0
 		for read in samfile.fetch():
