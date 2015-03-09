@@ -93,10 +93,22 @@ Q_all_cols = h5_file.create_dataset("Q_all_cols",(nG,),dtype=dt_str_vlen)
 print ctime(), "Combining mapping results across genomes"
 pbar = ProgressBar(widgets=widgets, maxval=len(master_index.keys())*10).start()
 for i,read in enumerate(master_index):
-	for j in master_index[read]: 
-		Q_all[i,j] = genomes[ genome_index[j] ]["Q"][  master_index[ read ][ j ]  , 0 ] 
+	for j in master_index[read]:
+		best_score_on_genome = np.max(genomes[ genome_index[j] ]["Q"][  master_index[ read ][ j ]  , :] ) 
+		Q_all[i,j] = best_score_on_genome
+		Q_all_rows[i] = read
 	pbar.update(10*i+1)
 pbar.finish()
+
+
+Q_all_row_sums = h5_file.create_dataset("Q_all_row_sums",(nR,),dtype="float")
+Q_all_row_sums[:] = np.sum(Q_all,1)
+
+# adjust data by removing reads with no mapped genomes ... this needs to be checked
+Q_all[Q_all_row_sums == 0,:] = 1e-8
+Q_all_row_sums[:] = np.sum(Q_all,1)
+
+
 
 print ctime(), "Done"
 
