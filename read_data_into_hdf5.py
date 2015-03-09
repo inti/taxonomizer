@@ -110,6 +110,5 @@ Q_all_row_sums[:] = np.sum(Q_all,1)
 
 
 
-
 print ctime(), "Done"
 
