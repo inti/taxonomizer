@@ -98,5 +98,9 @@ for i,read in enumerate(master_index):
 	pbar.update(10*i+1)
 pbar.finish()
 
+
+Q_all_row_sums = h5_file.create_dataset("Q_all_row_sums",(nR,),dtype="float")
+Q_all_row_sums[:] = np.sum(Q_all,1)
+
 print ctime(), "Done"
 
